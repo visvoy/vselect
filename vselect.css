@@ -23,6 +23,7 @@
 .vselect-panel ul,.vselect-panel li{
 	padding:0;
 	margin:0;
+	list-style:none;
 }
 .vselect em{
 	font-style:normal;
