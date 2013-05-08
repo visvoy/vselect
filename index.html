@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>vselect demo</title>
+<script src="jquery.js" type="text/javascript"></script>
+
+<!-- load vselect -->
+<script src="vselect.min.js" type="text/javascript"></script>
+<link href="vselect.css" type="text/css" rel="stylesheet" />
+
+<!-- demo style -->
+<style type="text/css">
+h1{font-size:32px}
+h2{font-size:24px}
+.demo{
+    float:left;
+    width:50%;
+    border-top:2px solid #ccc;
+    border-right:2px solid #ccc;
+}
+.code{
+    float:right;
+    padding-left:1.5%;
+    padding-bottom:20px;
+    border-bottom:2px solid #ccc;
+    width:48%;
+}
+.clear{
+	background: none;
+	border: 0;
+	clear: both;
+	display: block;
+	float: none;
+	font-size: 0;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+</style>
+</head>
+<body>
+<h1>vselect</h1>
+<p>A &lt;select> beautifier based on jQuery for all browsers(IE6 ok)</p>
+<p>on github: <a href="https://github.com/visvoy/vselect" target="_blank">https://github.com/visvoy/vselect</a></h2></p>
+<br /><br />
+
+
+<div class="demo">
+    <h2>基本用法</h2>
+    原选择框: 
+    <select name="basic_select" id="basic_select">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <br /><br />
+    变形之后: 
+    <select name="basic_select_after" id="basic_select_after">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select> &nbsp;&lt;- 点击看看
+    <p id="basic_select_see_value">&nbsp;</p>
+    <script type="text/javascript">
+    $(function(){
+        $("#basic_select_after").vselect({
+            change:function(){
+                $("#basic_select_see_value").html(
+                    '您选择了'+$("#basic_select_after").vselectCaption()
+                    +', 对应数值是'+$("#basic_select_after").val()
+                );
+            }
+        });
+    });
+    </script>
+</div>
+<div class="code">
+    <h2>&lt;code></h2>
+<pre>
+&lt;select id="basic_select_after">很多options&lt;/select>
+
+&lt;script type="text/javascript">
+$(function(){
+    // 变形
+    $("#basic_select_after").vselect();
+});
+&lt;/script></pre>
+</div>
+<div class="clear"></div><br /><br />
+
+
+<div class="demo" style="min-width:420px;">
+    <h2>属性设置</h2>
+<pre>
+    $("#xxx").vselect({
+        在这里设置xxx的属性
+    });</pre>
+    <br />
+    长长的条: 
+    <select id="select_long">
+        <option value="">width:320</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <br /><br />
+    默认选中: 
+    <select id="select_default">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3" selected>Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <br /><br />
+    自动分列: 
+    <select id="select_height">
+        <option value="">高度超过maxHeight就分列</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+        <option value="21">李雷二代</option>
+        <option value="22">韩梅梅二代</option>
+        <option value="23">Lucy二代</option>
+        <option value="24">Lily二代</option>
+        <option value="25">林涛二代</option>
+    </select>
+    <br /><br />
+    控制方向: 
+    <select id="select_dir_top">
+        <option value="">向上弹出</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    &nbsp;
+    <select id="select_dir_bottom">
+        <option value="">向下弹出</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <br /><br />
+    支持多选: 
+    <select id="select_multiple" multiple="true">
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    &nbsp;提交之后的数据格式: 1|^|2|^|3...
+    <br /><br />
+    自定格式: 
+    <select id="select_style">
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <br /><br />
+    多标签: 
+    <select id="select_optgroup">
+        <optgroup label="男性">
+            <option value="1">李雷</option>
+            <option value="5">林涛</option>
+        </optgroup>
+        <optgroup label="女性">
+            <option value="2">韩梅梅</option>
+            <option value="3">Lucy</option>
+            <option value="4">Lily</option>
+        </optgroup>
+    </select>
+    
+    <script type="text/javascript">
+    $(function(){
+        $("#select_long").vselect({
+            width:320
+        });
+        $("#select_default").vselect();
+        $("#select_height").vselect({
+            maxHeight:200
+        });
+        $("#select_dir_top").vselect({
+            direction:"top"
+        });
+        $("#select_dir_bottom").vselect({
+            direction:"bottom"
+        });
+        $("#select_multiple").vselect();
+        $("#select_style").vselect({
+            styleString:"border-color:red;"
+        });
+        $("#select_optgroup").vselect();
+    });
+    </script>
+</div>
+<div class="code">
+    <h2>属性大全</h2>
+    <table border="1" cellspacing="0" cellpadding="5" style="border-color:#bbb;">
+        <tr><th align="left">属性名</th><th nowrap>值类型</th><th>说明</th></tr>
+        <tr>
+            <td>width</td>
+            <td>数字或百分比</td>
+            <td>控制vselect宽度，如果不设置，就使用vselect.css的预设宽度(200px)</td>
+        </tr>
+        <tr>
+            <td>默认选中</td>
+            <td>特性</td>
+            <td>支持原生的&lt;option selected></td>
+        </tr>
+        <tr>
+            <td>自动分列</td>
+            <td>特性</td>
+            <td>下拉框默认最大高度320px，当option太多，高度超过该值，将自动分成多列</td>
+        </tr>
+        <tr>
+            <td>maxHeight</td>
+            <td>数字</td>
+            <td>控制下拉框最大高度，默认320  (px)</td>
+        </tr>
+        <tr>
+            <td>maxColumn</td>
+            <td>数字</td>
+            <td>自动分列的最多列数，默认5  (列)，当达到最多列数, 仍然还有option没显示完, vselect会增加下拉框的高度 (即无视maxHeight)</td>
+        </tr>
+        <tr>
+            <td>direction</td>
+            <td>top<br />bottom<br />center<br /></td>
+            <td>控制下拉框弹出方向，默认是center (水平不变，垂直扩大显示)</td>
+        </tr>
+        <tr>
+            <td>styleString</td>
+            <td>css</td>
+            <td>为这个vselect指定css，例如: "border-color:red;"</td>
+        </tr>
+        <tr>
+            <td>分标签</td>
+            <td>特性</td>
+            <td>支持原生的 &lt;optgroup label="xx"></td>
+        </tr>
+    </table>
+</div>
+<div class="clear"></div><br /><br />
+
+
+<div class="demo">
+    <h2>事件支持</h2>
+    <br />
+    数值改变时: 
+    <select id="select_change">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <span id="select_change_string"></span>
+    <br /><br />
+    下拉框出现: 
+    <select id="select_show">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <span id="select_show_string"></span>
+    <br /><br />
+    下拉框消失: 
+    <select id="select_hide">
+        <option value="">请选择</option>
+        <option value="1">李雷</option>
+        <option value="2">韩梅梅</option>
+        <option value="3">Lucy</option>
+        <option value="4">Lily</option>
+        <option value="5">林涛</option>
+    </select>
+    <span id="select_hide_string"></span>
+    
+    <script type="text/javascript">
+    $(function(){
+        $("#select_change").vselect({
+            change:function(){
+                $("#select_change_string").html(
+                    '您选择了'+$("#select_change").vselectCaption()
+                    +', 对应数值是'+$("#select_change").val()
+                );
+            }
+        });
+        $("#select_show").vselect({
+            show:function(){
+                $("#select_show_string").html(
+                    '出现了'+Math.random()
+                );
+            }
+        });
+        $("#select_hide").vselect({
+            hide:function(){
+                $("#select_hide_string").html(
+                    '消失了'+Math.random()
+                );
+            }
+        });
+    });
+    </script>
+</div>
+<div class="code">
+    <h2>事件大全</h2>
+    <table border="1" cellspacing="0" cellpadding="5" style="border-color:#bbb;">
+        <tr><th align="left">事件名</th><th>说明</th></tr>
+        <tr>
+            <td>change</td>
+            <td>当用户点选下拉框内容时触发</td>
+        </tr>
+        <tr>
+            <td>show</td>
+            <td>当下拉框出现之后触发</td>
+        </tr>
+        <tr>
+            <td>hide</td>
+            <td>当下拉框收起之后触发</td>
+        </tr>
+    </table>
+</div>
+<div class="clear"></div><br /><br />
+
+
+<div class="demo">
+    <h2>多级联动</h2>
+    <br />
+    选分类: 
+    <select id="select_first_level">
+        <option value="">请选择性别</option>
+        <option value="1">爷们</option>
+        <option value="2">姐们</option>
+        <option value="3">兽</option>
+    </select>
+    <select id="select_second_level">
+        <option value="0">请选择</option>
+    </select>
+    <br /><br />
+    <p>原理：使用 change 事件, 在其中调用 $("#second").vselectReset({二级下拉框的json数据});</p>
+    <p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 这样二级下拉框的内容就跟着更新了</p>
+    <script type="text/javascript">
+    var secondJson={
+        "0":{
+            "0":"请选择"
+        },
+        
+        "1":{
+            "0":"请选择男性",
+            "1":"李雷",
+            "2":"林涛"
+        },
+        
+        "2":{
+            "0":"请选择女性",
+            "1":"韩梅梅",
+            "2":"Lucy",
+            "3":"Lily"
+        },
+        
+        "3":{
+            "0":"请选择动物",
+            "1":"Polly"
+        }
+    };
+    $(function(){
+        $("#select_first_level").vselect({
+            change:function(){
+                var val=$(this).val(),newData;
+                if(!secondJson[val]){
+                    newData=secondJson["0"];
+                }else{
+                    newData=secondJson[val];
+                }
+                $("#select_second_level").vselectReset(newData);
+            }
+        });
+        $("#select_second_level").vselect();
+    });
+    </script>
+</div>
+<div class="code">
+    <h2>&lt;code></h2>
+    <textarea rows="10" cols="72">
+<select id="select_first_level">
+    <option value="">请选择性别</option>
+    <option value="1">爷们</option>
+    <option value="2">姐们</option>
+    <option value="3">兽</option>
+</select>
+<select id="select_second_level">
+    <option value="0">请选择</option>
+</select>
+
+<script type="text/javascript">
+var secondJson={
+    "0":{
+        "0":"请选择"
+    },
+
+    "1":{
+        "0":"请选择男性",
+        "1":"李雷",
+        "2":"林涛"
+    },
+
+    "2":{
+        "0":"请选择女性",
+        "1":"韩梅梅",
+        "2":"Lucy",
+        "3":"Lily"
+    },
+
+    "3":{
+        "0":"请选择动物",
+        "1":"Polly"
+    }
+};
+$(function(){
+    $("#select_first_level").vselect({
+        change:function(){
+            var val=$(this).val(),newData;
+            if(!secondJson[val]){
+                newData=secondJson["0"];
+            }else{
+                newData=secondJson[val];
+            }
+            $("#select_second_level").vselectReset(newData);
+        }
+    });
+    $("#select_second_level").vselect();
+});
+</script>
+    </textarea>
+</div>
+<div class="clear"></div><br /><br />
+
+<h2>visit vselect on github: <a href="https://github.com/visvoy/vselect" target="_blank">https://github.com/visvoy/vselect</a></h2>
+</body>
+</html>
