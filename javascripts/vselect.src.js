@@ -1,5 +1,5 @@
 // 
-// vselect 1.0
+// vselect 1.01
 // 
 // @link	https://github.com/visvoy/vselect
 // @author	visvoy@gmail.com
@@ -15,6 +15,9 @@ ie6=ie&&!w.XMLHttpRequest,
 
 // 全局配置
 config={
+	// 组合多选数据的分隔符
+	multipleJointer:"|^|",
+	
 	// 下拉框显示速度
 	speed:"fast",
 	
@@ -35,11 +38,8 @@ style={
 
 // 新建vselect的配置选项
 defaultOptions={
-	// 指定默认值
-	defaultValue:null,
-	
-	// 指定默认文案
-	defaultCaption:null,
+	// 指定选中值
+	selectedValue:null,
 	
 	// optgroup模式里面没有分组的标签名
 	grouplessLabel:'其他',
@@ -70,7 +70,8 @@ defaultOptions={
 
 autoIndex=1,
 shadowObj=null,
-activePanel=[];
+activePanel=[],
+showingPanel={};
 
 // Check if value [v] is undefined
 function no(v){
@@ -104,7 +105,7 @@ function scrollPos(){
 	return p;
 }
 
-// 初始化vselect插件
+// 初始化vselect环境
 var vselectInited=false;
 function vselectInit(){
 	vselectInited=true;
@@ -133,18 +134,17 @@ function vselectInit(){
 
 		papa=papa.parent().parent();
 		if(papa.hasClass(style.panel)){
-			if(tmp=papa.attr("id")){
-				tmp=$("a[rel='"+tmp+"']:first")[0];
+			if(tmp=d.getElementById(papa.attr("id").slice(0,-5))){
 				if(tmp&&typeof tmp._multiple!="undefined"&&tmp._multiple)
 					return;
 			}
 		}
-		fn.panelClean();
+		fn.hideAll();
 	}).keyup(function(e){
 		// foldup panel when "ESC" key pressed
 		if(!e)e=w.event;
 		var code=(e.keyCode?e.keyCode:e.which);
-		if(27==code)fn.panelClean();
+		if(27==code)fn.hideAll();
 	});
 	
 	// init panel shadow
@@ -155,6 +155,7 @@ function vselectInit(){
 
 var fn={
 
+// 初始化vselect元素
 init:function(options){
 	if(!vselectInited)vselectInit();
 	options=options||{};
@@ -164,99 +165,25 @@ init:function(options){
 		}
 	}
 	return this.each(function(){
-		if(no(this.nodeName))return;
-		k=this.nodeName.toLowerCase()+'Init';
-		if(isfn(fn[k])){
-			fn[k].call(this,options);
-		}
+		fn.selectInit.call(this,options);
 	});
-},
-
-// 创建一个panel块
-_createBlock:function(that){
-	var htm='',item=$(that).find("> option"),i;
-	for(i=0;i<item.length;i++){
-		if(no(item[i].text)){
-			item[i].text=item[i].value;
-		}
-		htm+='<li><a href="javascript:;" rel="'+item[i].value+'">'+item[i].text+'</a></li>';
-	}
-	return '<ul>'+htm+'</ul>';
-},
-
-// 创建select替换内容
-_createHtml:function(id,name,that,options){
-	var htm,idText,nameText,autoId=autoIndex,title,css;
-	autoIndex++;
-	
-	htm=fn._createBlock(that);
-	idText=(id?' id="'+id+'" ':'');
-	nameText=(name?' name="'+name+'" ':'');
-	title=that.getAttribute('title')?' title="'+that.getAttribute('title')+'" ':'';
-	css=options.styleString?' style="'+options.styleString+'" ':'';
-	
-	$(that).after('<a href="javascript:;" class="'+style.select+'" rel="__'+style.select+autoId+'"'+title+css+'>'
-		+'<input type="hidden" '+idText+nameText+' value="" />'
-		+'<em></em><i>&#9660;</i></a>');
-	$("body:first").append('<div class="'+style.panel+'" id="__'
-		+style.select+autoId+'" style="display:none">'+htm+'</div>');
-	return autoId;
-},
-
-// 创建select替换内容（支持optgroup标签）
-_createHtmlWithOptgroup:function(id,name,that,options){
-	var htm='',i,idText,nameText,tab='',index=0,autoId=autoIndex,item,title,css;
-	autoIndex++;
-	
-	// find options inside optgroup
-	item=$(that).find("optgroup");
-	for(i=0;i<item.size();i++){
-		index++;
-		tab+='<em>'+(item[i].label||index)+'</em>';
-		htm+=fn._createBlock(item[i]);
-	}
-	
-	// find options without optgroup
-	if($(that).find("> option").size()>0){
-		index++;
-		tab+='<em>'+options.grouplessLabel+'</em>';
-		htm+=fn._createBlock(that);
-	}
-	
-	idText=(id?' id="'+id+'" ':'');
-	nameText=(name?' name="'+name+'" ':'');
-	title=that.getAttribute('title')?' title="'+that.getAttribute('title')+'" ':'';
-	css=options.styleString?' style="'+options.styleString+'" ':'';
-	
-	$(that).after('<a href="javascript:;" class="'+style.select+'" rel="__'+style.select+autoId+'"'+title+css+'>'
-		+'<input type="hidden" '+idText+nameText+' value="" />'
-		+'<em></em><i>&#9660;</i></a>');
-	$("body:first").append('<div class="'+style.panel+'" id="__'
-		+style.select+autoId+'" style="display:none">'
-		+'<div class="'+style.tab+'">'+tab+'</div>'+htm+'</div>');
-	return autoId;
 },
 
 // 初始化一个vselect
 selectInit:function(options){
-	var that=this,me=$(that),ob,id=that.id,name=that.name,selected,group,autoId;
+	var that,ob,group,val;
 
-	if(!name&&!id)return;
+	if(!this.name&&!this.id)return;
 	
 	// make jform element
-	if($(that).find("optgroup").size()<1){
-		autoId=fn._createHtml(id,name,that,options);
-		group=false;
-	}else{ // with optgroup
-		autoId=fn._createHtmlWithOptgroup(id,name,that,options);
-		group=true;
-	}
-	ob=me.next();
+	val=$(this).val();
+	group=($(this).find("optgroup").length>0);
+	ob=fn._createDom(this,options,group);
 	that=ob[0];
 	
 	// init vars
 	that._options = options;
-	that._panel   = $("#__"+style.select+autoId);
+	that._panel   = $("#__"+style.select+(autoIndex-1)+"panel");
 	that._value   = ob.find("input:first");
 	that._caption = ob.find("em:first");
 	if(options.width>0){
@@ -281,47 +208,23 @@ selectInit:function(options){
 	// init event
 	// 在ipad下面，要继承options.change事件到me
 	ob.click(fn.selectClick);
-	if(isfn(options.change)){
-		that._value.change(options.change);
-	}
 	
 	// cleanup
-	me.remove();
-},
+	$(this).remove();
 
-// 初始化一个panel块
-_panelBlockInit:function(that,ul){
-	var i,item=$(ul).find("a");
-	for(i=0;i<item.length;i++){
-        if(no(item[i].rel))continue;
-		item[i].onclick=function(e){
-			fn.itemClick.call(that,e,this.rel,this.innerHTML);
-		};
-	}
-},
-
-// 初始化vselect默认值
-_panelValueInit:function(that,panel,options){
-	var val='',caption='';
-	
-	if(that._initSelectedIndex>-1){
-		var ob=panel.find("a:eq("+that._initSelectedIndex+")");
-		val=ob.attr("rel");
-		caption=ob.text();
-	}
-	
-	if(null!==options.defaultValue){
-		val=options.defaultValue;
-		caption=(null===options.defaultCaption?val:options.defaultCaption);
-	}
-
-	fn.selectSetValue.call(that,val,caption,options);
+	// init/reset时候仅设置选中值，不要触发click事件
+	fn.setValue.call(that,null===options.selectedValue?val:options.selectedValue);
 },
 
 // 初始化一个panel
-panelInit:function(that,panel,options){
-	fn._panelBlockInit(that,panel);
-	fn._panelValueInit(that,panel,options);
+panelInit:function(that,ul,options){
+	var i,item=$(ul).find("a");
+	for(i=0;i<item.length;i++){
+        if(no(item[i].getAttribute("rel")))continue;
+		item[i].onclick=function(e){
+			fn.itemClick.call(that,e,this.getAttribute("rel"));
+		};
+	}
 },
 
 // 计算一个panel的合理宽高
@@ -357,10 +260,8 @@ panelInitWithOptgroup:function(that,panel,options){
 	
 	// init tab block content
 	panel.find("> ul").each(function(){
-		fn._panelBlockInit(that,this);
+		fn.panelInit(that,this,options);
 	});
-	
-	fn._panelValueInit(that,panel,options);
 },
 
 // 计算一个panel的合理宽高（支持optgroup标签）
@@ -424,6 +325,150 @@ panelArrangeWithOptgroup:function(that,panel,options){
 	fn.panelActiveSelectedTab(that);
 },
 
+// 创建select替换内容（支持optgroup标签）
+_createDom:function(that,options,group){
+	var htm='',i,idText,nameText,tab='',item,title,css;
+
+	if(!group){
+		htm=fn._createBlock(that);
+	}else{
+		// find options inside optgroup
+		item=$(that).find("optgroup");
+		for(i=0;i<item.size();i++){
+			tab+='<em>'+(item[i].label||index)+'</em>';
+			htm+=fn._createBlock(item[i]);
+		}
+
+		// find options without optgroup
+		if($(that).find("> option").size()>0){
+			tab+='<em>'+options.grouplessLabel+'</em>';
+			htm+=fn._createBlock(that);
+		}
+		
+		tab='<div class="'+style.tab+'">'+tab+'</div>';
+	}
+	
+	idText=(that.id?' id="'+that.id+'" ':'');
+	nameText=(that.name?' name="'+that.name+'" ':'');
+	title=that.getAttribute('title')?' title="'+that.getAttribute('title')+'" ':'';
+	css=options.styleString?' style="'+options.styleString+'" ':'';
+	
+	$(that).after('<a href="javascript:;" class="'+style.select+'" id="__'+style.select+autoIndex+'"'+title+css+'>'
+		+'<input type="hidden" '+idText+nameText+' value="" />'
+		+'<em></em><i>&#9660;</i></a>');
+	$("body:first").append('<div class="'+style.panel+'" id="__'
+		+style.select+autoIndex+'panel" style="display:none">'
+		+tab+htm+'</div>');
+	return $(d.getElementById('__'+style.select+autoIndex++));
+},
+
+// 创建一个panel块
+_createBlock:function(that){
+	var htm='',item=$(that).find("> option"),i;
+	for(i=0;i<item.length;i++){
+		if(no(item[i].text)){
+			item[i].text=item[i].value;
+		}
+		htm+='<li><a href="javascript:;" rel="'+item[i].value+'">'+item[i].text+'</a></li>';
+	}
+	return '<ul>'+htm+'</ul>';
+},
+
+// 设置一个vselect的值，如果是optgroup的，将自动切换到相应的标签
+// 这个方法不会出发change事件，仅设置值，属于内部调用
+setValue:function(val){
+	var i,r,caption=null,that=this,me=$(that),options=fn.options(that),item=that._panel.find("a");
+	if(!that._multiple){
+		item.removeClass(style.linkOn);
+		for(i=0;i<item.length;i++){
+			r=item[i];
+			if(!no(r.rel)&&r.rel==val){
+				r.className=style.linkOn;
+				caption=r.innerHTML;
+			}
+		}
+		if(null===caption&&item.length>0){
+			val=item[0].rel;
+			caption=item[0].innerHTML;
+		}
+	}else{
+		var tc=[],tv=[];
+		for(i=0;i<item.length;i++){
+			r=item[i];
+			if(!no(r.rel)&&r.rel==val){
+				r.className=r.className==style.linkOn?"":style.linkOn;
+			}
+			if(r.className==style.linkOn){
+				tc.push(r.innerHTML);
+				tv.push(r.rel);
+			}
+		}
+		val=caption="";
+		if(tv.length>0){
+			caption=tc.join(",");
+			val=tv.join(config.multipleJointer);
+		}
+	}
+	
+	that._caption.html(caption);
+    that._value.val(val).attr("rel",caption);
+
+	if(that._caption.width()+26>that._selectWidth){
+		me.width(that._caption.width()+26);
+	}
+	if(that._caption.width()+26<that._selectWidth){
+		me.width(that._selectWidth);
+	}
+	
+	// use text underline to mark up selected optgroup tabs
+	if(that._group){
+		var i,eqs={};
+		that._tab.find("em").css("text-decoration","none");
+		that._panel.find("a."+style.linkOn).each(function(){
+			eqs[$(this).parent().parent().index()-1]=1;
+		});
+		for(i in eqs){
+			that._tab.find("em:eq("+i+")").css("text-decoration","underline");
+		}
+	}
+},
+
+// 一个vselect被点击的事件
+selectClick:function(e){
+	fn.haltEvent(e);
+    fn.hideAll();
+	fn.show.call(this);
+},
+
+// 一个option被点击的事件
+itemClick:function(e,val,noEvent){
+	var that=this,options=fn.options(that),chg=(val!=that._value.val());
+	if(!that._multiple)fn.hideAll();
+	fn.setValue.call(that,val);
+	if(isfn(options.click)||(chg&&isfn(options.change))){
+		if(!noEvent)fn.haltEvent(e);
+		if(isfn(options.click))options.click.call(that._value,e,val);
+		if(chg&&isfn(options.change))options.change.call(that._value,e,val);
+	}
+},
+
+// 从option里面找到value=val的item，模拟点击这个item，并且切换到相应的tab页（optgroup模式）
+clickValue:function(val){
+	var lnk=this._panel.find("a[rel='"+val+"']");
+	if(lnk.length>0){
+		fn.itemClick.call(this,w.event,val,true);
+		if(this._tab)fn.panelActiveSelectedTab(this);
+	}
+},
+
+// 一个tab标签被点击的事件
+panelTabClick:function(that,index){
+	var tab=that._panel.find("div."+style.tab);
+	tab.find("em").removeClass(style.tabOn).eq(index).addClass(style.tabOn);
+	that._panel.find("> ul").hide().eq(index).show();
+	that._panel.css({width:that._panelWidth,height:that._panelHeight});
+},
+
 // 激活首个有选中选项的tab页
 panelActiveSelectedTab:function(that){
 	var idx,blocks=that._panel.find("> ul");
@@ -434,14 +479,6 @@ panelActiveSelectedTab:function(that){
 	if(idx>=blocks.length)idx=0;
 	blocks.hide().eq(idx).show();
 	that._tab.find("em").removeClass(style.tabOn).eq(idx).addClass(style.tabOn);
-},
-
-// 一个tab标签被点击的事件
-panelTabClick:function(that,index){
-	var tab=that._panel.find("div."+style.tab);
-	tab.find("em").removeClass(style.tabOn).eq(index).addClass(style.tabOn);
-	that._panel.find("> ul").hide().eq(index).show();
-	that._panel.css({width:that._panelWidth,height:that._panelHeight});
 },
 
 // 计算panel正确显示的位置
@@ -488,19 +525,12 @@ panelPosition:function(that,panel,options,usePanelLeft){
 	return {x:px,y:py,w:pw,h:ph};
 },
 
-// 一个vselect被点击的事件
-selectClick:function(e){
+show:function(){
 	var that=this,me=$(that),options=fn.options(that),border,panel=that._panel,pos;
-
-	// cleanup first
-	e=e||w.event;
-	if(e.stopPropagation)e.stopPropagation();
-	else e.cancelBubble=true;
-    fn.panelClean();
 	me.blur();
 	
 	if(panel.is(":visible"))return;
-    
+    showingPanel[that.id]=true;
 	border=fn.borderSize(panel);
 	panel.show().css({
 		// opacity:1,
@@ -513,6 +543,7 @@ selectClick:function(e){
 	}
 	pos=fn.panelPosition(that,panel,options,true);
 	that._panel.animate({height:pos.h,left:pos.x,top:pos.y},config.speed,function(){
+		showingPanel[that.id]=false;
 		if(isfn(options.show))options.show.call(that);
 	});
 	if(config.shadow){
@@ -528,38 +559,8 @@ selectClick:function(e){
 	activePanel.push(that);
 },
 
-// 一个option被点击的事件
-itemClick:function(e,val,caption){
-	var that=this,options=fn.options(that);
-	if(!that._multiple)fn.panelClean();
-	fn.selectSetValue.call(that,val,caption,options);
-    that._value.trigger("change");
-},
-
-// 重新填充vselect的数据
-reset:function(newData,selectedValue){
-	var that=this,panel=that._panel,options=fn.options(that),htm='',k;
-	
-	that._initSelectedIndex=0;
-	options.maxHeight=that._origMaxHeight;
-
-	for(k in newData){
-		if(selectedValue==k){
-			that._initSelectedIndex=i++;
-		}
-		htm+='<li><a href="javascript:;" rel="'+k+'">'+newData[k]+'</a></li>';
-	}
-
-	// should check optgroup later..
-	
-	panel.empty().html('<ul>'+htm+'</ul>');
-	
-	fn.panelInit(that,panel,options);
-	fn.panelArrange(that,panel,options);
-},
-
 // 隐藏当前显示的panel
-panelHide:function(){
+hide:function(){
 	var that=this,options=fn.options(that),me=$(this),panel=this._panel,border=fn.borderSize(panel),z;
 	z=panel.css('z-index');
 	panel.css('z-index',z-1);
@@ -579,83 +580,40 @@ panelHide:function(){
 },
 
 // 隐藏所有panel
-panelClean:function(){
+hideAll:function(){
     var ob;
     while(ob=activePanel.pop()){
-		fn.panelHide.apply(ob);
+		// if(!showingPanel[ob.id])
+			fn.hide.call(ob);
     }
 },
 
-// 设置一个vselect的值，如果是optgroup的，将自动切换到相应的标签
-selectSetValue:function(val,caption,options){
-	var that=this,me=$(that),options=fn.options(that);
-	if(!that._multiple){
-		that._panel.find("a").removeClass(style.linkOn);
-		that._panel.find("a[rel='"+val+"']").addClass(style.linkOn);
-	}else{
-		var tc=[],tv=[],i,r,item=that._panel.find("a");
-		for(i=0;i<item.length;i++){
-			r=item[i];
-			if(!no(r.rel)&&r.rel==val){
-				r.className=r.className.indexOf(style.linkOn)>-1?"":style.linkOn;
-			}
-			if(r.className.indexOf(style.linkOn)>-1){
-				tc.push(r.innerHTML);
-				tv.push(r.rel);
-			}
-		}
-		if(tv.length>0||options.defaultValue===null){
-			caption=tc.join(",");
-			val=tv.join("|^|");
-		}else{ // use default value when non selected
-			val=options.defaultValue;
-			caption=options.defaultCaption||options.defaultValue;
-		}
+// 重新填充vselect的数据
+reset:function(newData,selectedValue){
+	var that=this,panel=that._panel,options=fn.options(that),htm='',k;
+	
+	that._initSelectedIndex=-1;
+	options.maxHeight=that._origMaxHeight;
+	if(!no(selectedValue))options.selectedValue=selectedValue;
+
+	// todo: reset for optgroup
+	
+	for(k in newData){
+		htm+='<li><a href="javascript:;" rel="'+k+'">'+newData[k]+'</a></li>';
 	}
 	
-	that._caption.html(caption);
-    that._value.val(val).attr("rel",caption);
-
-	if(that._caption.width()+26>that._selectWidth){
-		me.width(that._caption.width()+26);
-	}
-	if(that._caption.width()+26<that._selectWidth){
-		me.width(that._selectWidth);
-	}
+	panel.empty().html('<ul>'+htm+'</ul>');
 	
-	// use text underline to mark up selected optgroup tabs
-	if(!that._group)return;
-	var i,eqs={};
-	that._tab.find("em").css("text-decoration","none");
-	that._panel.find("a."+style.linkOn).each(function(){
-		eqs[$(this).parent().parent().index()-1]=1;
-	});
-	for(i in eqs){
-		that._tab.find("em:eq("+i+")").css("text-decoration","underline");
-	}
+	fn.panelInit(that,panel,options);
+	fn.panelArrange(that,panel,options);
+	fn.setValue.call(that,options.selectedValue);
 },
 
-// 根据nodeName调用对应的方法
-_castByType:function(type){
-	if(typeof this.nodeName!="string")return;
-	var k=this.nodeName.toLowerCase()+type;
-	if(isfn(fn[k])){
-		fn[k].call(this);
-	}
-},
-
-// 显示一个元素（根据元素的nodeName确定调用哪个方法）
-showItem:function(){
-	this.each(function(){
-		fn._castByType.call(this,"Show");
-	});
-},
-
-// 隐藏一个元素（根据元素的nodeName确定调用哪个方法）
-hideItem:function(){
-	this.each(function(){
-		fn._castByType.call(this,"Hide");
-	});
+haltEvent:function(e){
+	e=e||w.event;
+	if(e.stopPropagation)e.stopPropagation();
+	else e.cancelBubble=true;
+	return false;
 },
 
 // 计算一个dom的边框厚度
@@ -676,12 +634,6 @@ options:function(ob){
 value:function(){
 	if(this._value)return this._value.val();
 	return this.value;
-},
-
-// 为vselect设置一个值，并且切换到相应的tab页（optgroup模式）
-setValue:function(val){
-	this._panel.find("a[rel='"+val+"']").trigger("click");
-	if(this._tab)fn.panelActiveSelectedTab(this);
 },
 
 // 获得当前vselect的选中文案
@@ -741,18 +693,24 @@ $.vselect={
 		style[key]=val;
 	},
 	
-	hide:fn.panelClean
+	hide:fn.hideAll
 };
 
 $.fn.extend({
 	vselect:function(){
-	    fn.init.apply(this,arguments);
+	    return fn.init.apply(this,arguments);
 	},
 	vselectShow:function(){
-	    fn.showItem.apply(this,arguments);
+		var arg=arguments;
+		return this.each(function(){
+		    fn.show.apply(this._panel?this:$(this).parent()[0],arg);
+		});
 	},
 	vselectHide:function(){
-	    fn.hideItem.apply(this,arguments);
+		var arg=arguments;
+		return this.each(function(){
+		    fn.hide.apply(this._panel?this:$(this).parent()[0],arg);
+		});
 	},
 	vselectValue:function(){
 		if(this.size()<1){
@@ -766,6 +724,12 @@ $.fn.extend({
 		}
 		return fn.setValue.call(this.parent()[0],val);
 	},
+	vselectClickValue:function(val){
+		if(this.size()<1){
+			return null;
+		}
+		return fn.clickValue.call(this.parent()[0],val);
+	},
 	vselectCaption:function(){
 		if(this.size()<1){
 			return null;
@@ -775,14 +739,8 @@ $.fn.extend({
 	vselectReset:function(){
 		var arg=arguments;
 		return this.each(function(){
-			if($(this).is("input:hidden")){
-				fn.reset.apply($(this).parent()[0],arg);
-				return;
-			}
-			if(this._panel){
-				fn.reset.apply(this,arg);
-				return;
-			}
+			fn.reset.apply(this._panel?this:$(this).parent()[0],arg);
+			return;
 		});
 	}
 });
