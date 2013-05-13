@@ -208,13 +208,6 @@ selectInit:function(options){
 	// init event
 	// 在ipad下面，要继承options.change事件到me
 	ob.click(fn.selectClick);
-	// if(isfn(options.change)){
-	// 	that._value.change(function(e){
-	// 		w.setTimeout(function(){
-	// 			options.change.call(that,e);
-	// 		},16);
-	// 	});
-	// }
 	
 	// cleanup
 	$(this).remove();
@@ -227,7 +220,7 @@ selectInit:function(options){
 panelInit:function(that,ul,options){
 	var i,item=$(ul).find("a");
 	for(i=0;i<item.length;i++){
-        if(no(item[i].rel))continue;
+        if(no(item[i].getAttribute("rel")))continue;
 		item[i].onclick=function(e){
 			fn.itemClick.call(that,e,this.getAttribute("rel"));
 		};
@@ -448,23 +441,24 @@ selectClick:function(e){
 },
 
 // 一个option被点击的事件
-itemClick:function(e,val){
+itemClick:function(e,val,noEvent){
 	var that=this,options=fn.options(that),chg=(val!=that._value.val());
 	if(!that._multiple)fn.hideAll();
 	fn.setValue.call(that,val);
 	if(isfn(options.click)||(chg&&isfn(options.change))){
-		fn.haltEvent(e);
-		if(isfn(options.click))
-			options.click.call(that._value,e,val);
-		if(chg&&isfn(options.change))
-			options.change.call(that._value,e,val);
+		if(!noEvent)fn.haltEvent(e);
+		if(isfn(options.click))options.click.call(that._value,e,val);
+		if(chg&&isfn(options.change))options.change.call(that._value,e,val);
 	}
 },
 
 // 从option里面找到value=val的item，模拟点击这个item，并且切换到相应的tab页（optgroup模式）
 clickValue:function(val){
-	this._panel.find("a[rel='"+val+"']").trigger("click");
-	if(this._tab)fn.panelActiveSelectedTab(this);
+	var lnk=this._panel.find("a[rel='"+val+"']");
+	if(lnk.length>0){
+		fn.itemClick.call(this,w.event,val,true);
+		if(this._tab)fn.panelActiveSelectedTab(this);
+	}
 },
 
 // 一个tab标签被点击的事件
