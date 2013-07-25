@@ -1,16 +1,17 @@
 /* jquery select (include multiple) 
  * ================================ */
 .vselect{
-	width:200px;
+	width:197px;
 	display:inline-block;
 	*display:inline;
 	*zoom:1;
-	border:1px solid #bbb;
-	font-size:14px;
+	border:1px solid #ccc;
+	font-size:13px;
 	margin:0;
-	height:26px;
-	line-height:26px;
+	height:28px;
+	line-height:28px;
     padding:0 6px 0 8px;
+    color:#333;
 	background:#fff;
     cursor:pointer;
     -moz-user-select:none;
@@ -19,34 +20,44 @@
 	text-decoration:none;
 	vertical-align:middle;
 }
+.vselect:hover{
+    color:#333;
+}
 .vselect ul,.vselect li,
 .vselect-panel ul,.vselect-panel li{
 	padding:0;
 	margin:0;
+	list-style:none;
 }
 .vselect em{
 	font-style:normal;
 	float:left;
-	color:#333;
+	color:#616161;
 	white-space:nowrap;
 }
 .vselect i{
 	font-style:normal;
 	float:right;
-	color:#515151;
+	color:#777;
 	font-size:12px;
 }
 .vselect:hover{
 	text-decoration:none;
-	border-color:#909090;
+    border-color:#b6b6b6;
+}
+.vselect:hover i{
+	color:#555;
 }
 .vselect:active{
-	border-color:#5c5c5c;
+    border-color:#909090;
+}
+.vselect:active i{
+	color:#333;
 }
 .vselect-panel{
-	width:200px;
+	width:197px;
 	background:white;
-	border:1px solid #5c5c5c;
+	border:1px solid #909090;
 	position:absolute;
 	top:0;
 	left:0;
@@ -68,15 +79,16 @@
 .vselect-panel li{
 	float:left;
 	width:100%;
-	height:26px;
+	height:28px;
 	overflow-y:hidden;
+	font-size:13px;
 }
 .vselect-panel li a,.vselect-link-on{
-	height:26px;
-	line-height:26px;
+	height:28px;
+	line-height:28px;
 	padding:0 6px 0 8px;
 	display:block;
-	color:#333;
+	color:#454545;
 	text-decoration:none;
 }
 .vselect-panel li a:hover{
@@ -98,7 +110,7 @@
 	width:100%;
 	height:auto;
 	background:#f1f2f1;
-	line-height:30px;
+/*    line-height:28px;*/
 	border-bottom:1px solid #ababab;
 	/* don't use nowrap! */
 }
@@ -107,21 +119,22 @@
 	display:inline-block;
 	*display:inline;
 	*zoom:1;
-	font-size:15px;
+	font-size:13px;
 	font-style:normal;
-	line-height:30px;
+	height:28px;
+	line-height:28px;
 	padding:0 10px;
-	color:#222;
+	color:#363636;
 	cursor:pointer;
 }
 .vselect-panel-tab span.vselect-panel-tab-hover,
 .vselect-panel-tab-hover{
 	background:#dedfde;
-	color:#000;
+/*    color:#000;*/
 }
 .vselect-panel-tab span.vselect-panel-tab-on,
 .vselect-panel-tab-on{
 /*	background:#7bceff;*/
 	background:#c2d6f3;
-	color:#000;
+/*    color:#000;*/
 }
