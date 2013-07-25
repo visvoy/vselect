@@ -194,6 +194,7 @@ selectInit:function(options){
 	that._multiple          = this.multiple;
 	that._initSelectedIndex = this.options.selectedIndex;
 	that._origMaxHeight		= options.maxHeight;
+    that._column            = 1;
 	
 	// init panel
 	if(!group){
@@ -243,6 +244,8 @@ panelArrange:function(that,panel,options){
 			break;
 		}
 	}
+    that._column=n;
+    that._showWidth=panel.css("width");
 },
 
 // 初始化一个panel（支持optgroup标签）
@@ -320,6 +323,8 @@ panelArrangeWithOptgroup:function(that,panel,options){
 
 		that._panelHeight=Math.max(panel.height(),that._panelHeight);
 	});
+    that._column=n;
+    that._showWidth=panel.css("width");
 	
 	// active first selected tab
 	fn.panelActiveSelectedTab(that);
@@ -330,7 +335,7 @@ _createDom:function(that,options,group){
 	var htm='',i,idText,nameText,tab='',item,title,css;
 
 	if(!group){
-		htm=fn._createBlock(that);
+		htm=fn._createBlock(that,true);
 	}else{
 		// find options inside optgroup
 		item=$(that).find("optgroup");
@@ -363,7 +368,7 @@ _createDom:function(that,options,group){
 },
 
 // 创建一个panel块
-_createBlock:function(that){
+_createBlock:function(that,noGroup){
 	var htm='',item=$(that).find("> option"),i;
 	for(i=0;i<item.length;i++){
 		if(no(item[i].text)){
@@ -371,6 +376,9 @@ _createBlock:function(that){
 		}
 		htm+='<li><a href="javascript:;" rel="'+item[i].value+'">'+item[i].text+'</a></li>';
 	}
+    if(typeof noGroup!='undefined'&&noGroup&&item.length==1){
+		htm+='<li>&nbsp;</li>';
+    }
 	return '<ul>'+htm+'</ul>';
 },
 
@@ -526,7 +534,7 @@ panelPosition:function(that,panel,options,usePanelLeft){
 },
 
 show:function(){
-	var that=this,me=$(that),options=fn.options(that),border,panel=that._panel,pos;
+	var that=this,me=$(that),options=fn.options(that),border,panel=that._panel,pos,anim;
 	me.blur();
 	
 	if(panel.is(":visible"))return;
@@ -542,7 +550,18 @@ show:function(){
 		panel.css("width",that._panelWidth);
 	}
 	pos=fn.panelPosition(that,panel,options,true);
-	that._panel.animate({height:pos.h,left:pos.x,top:pos.y},config.speed,function(){
+    anim={height:pos.h,left:pos.x,top:pos.y};
+    if(that._column>1){
+        // anim.width=pos.w;
+        anim.width=that._showWidth;
+        panel.css("width",me.outerWidth());
+    }
+    if(options.direction=="top"){
+        // anti bottom shocking on animate
+        panel.css("top",me.offset().top+1);
+    }
+    // console.log(that._column+'column(s)',me.outerWidth(),pos.w);
+	that._panel.animate(anim,config.speed,function(){
 		showingPanel[that.id]=false;
 		if(isfn(options.show))options.show.call(that);
 	});
@@ -561,15 +580,23 @@ show:function(){
 
 // 隐藏当前显示的panel
 hide:function(){
-	var that=this,options=fn.options(that),me=$(this),panel=this._panel,border=fn.borderSize(panel),z;
+	var that=this,options=fn.options(that),me=$(this),panel=this._panel,border=fn.borderSize(panel),z,anim;
 	z=panel.css('z-index');
 	panel.css('z-index',z-1);
-	panel.animate({
+    if(options.direction=="top"){
+        // anti bottom shocking on animate
+        panel.css("top",parseInt(panel.css("top"))+1);
+    }
+    anim={
 		// opacity:0.3,
 		height:(me.outerHeight()-border.height),
 		left:me.offset().left,
 		top:me.offset().top
-	},config.speed,function(){
+	};
+    if(that._column>1){
+        anim.width=me.outerWidth();
+    }
+	panel.animate(anim,config.speed,function(){
 		panel.hide();
 		panel.css('z-index',z);
 		if(isfn(options.hide))options.hide.call(that);
@@ -590,7 +617,7 @@ hideAll:function(){
 
 // 重新填充vselect的数据
 reset:function(newData,selectedValue){
-	var that=this,panel=that._panel,options=fn.options(that),htm='',k;
+	var that=this,panel=that._panel,options=fn.options(that),htm='',k,n=0;
 	
 	that._initSelectedIndex=-1;
 	options.maxHeight=that._origMaxHeight;
@@ -600,7 +627,11 @@ reset:function(newData,selectedValue){
 	
 	for(k in newData){
 		htm+='<li><a href="javascript:;" rel="'+k+'">'+newData[k]+'</a></li>';
+        n++;
 	}
+    if(1==n){
+		htm+='<li>&nbsp;</li>';
+    }
 	
 	panel.empty().html('<ul>'+htm+'</ul>');
 	
