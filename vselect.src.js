@@ -300,6 +300,7 @@ panelArrangeWithOptgroup:function(that,panel,options){
 		}
 		
 		that._panelWidth=Math.max(panel.width(),that._panelWidth);
+        that._column=Math.max(n,that._column);
 	});
 	
 	// then find max height
@@ -323,7 +324,6 @@ panelArrangeWithOptgroup:function(that,panel,options){
 
 		that._panelHeight=Math.max(panel.height(),that._panelHeight);
 	});
-    that._column=n;
     that._showWidth=panel.css("width");
 	
 	// active first selected tab
