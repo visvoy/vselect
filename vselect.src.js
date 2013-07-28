@@ -1,5 +1,5 @@
 // 
-// vselect 1.01
+// vselect 1.02
 // 
 // @link	https://github.com/visvoy/vselect
 // @author	visvoy@gmail.com
@@ -493,7 +493,9 @@ panelActiveSelectedTab:function(that){
 panelPosition:function(that,panel,options,usePanelLeft){
 	var p=scrollPos(),me=$(that),options=fn.options(that),border,px,py,pw,ph;
 	border=fn.borderSize(panel);
-	pw=(that._group?that._panelWidth:panel.width());
+    // pw=(that._group?that._panelWidth:panel.width());
+	pw=parseInt(that._showWidth);
+    console.log(panel.width(),pw);
 	ph=Math.min(that._panelHeight,options.maxHeight);
 	px=(usePanelLeft?panel.offset().left:me.offset().left);
 	switch(options.direction){
