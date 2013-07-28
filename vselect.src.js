@@ -495,7 +495,6 @@ panelPosition:function(that,panel,options,usePanelLeft){
 	border=fn.borderSize(panel);
     // pw=(that._group?that._panelWidth:panel.width());
 	pw=parseInt(that._showWidth);
-    console.log(panel.width(),pw);
 	ph=Math.min(that._panelHeight,options.maxHeight);
 	px=(usePanelLeft?panel.offset().left:me.offset().left);
 	switch(options.direction){
